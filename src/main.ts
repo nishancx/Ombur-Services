@@ -36,6 +36,8 @@ app.get('/register-sse', async (req: Request, res) => {
   const data = `data: ${JSON.stringify(Date.now())}\n\n`
 
   setInterval(() => {
+    // eslint-disable-next-line no-console
+    console.log('writing data')
     res.write(data)
   }, 1000)
 
