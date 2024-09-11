@@ -4,36 +4,27 @@ import express, { Request, Response } from 'express'
 import cookieParser from 'cookie-parser'
 import { decode } from 'next-auth/jwt'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-// const sseIdMap: Map<string, WritableStreamDefaultWriter<any>> = new Map()
-
 const app = express()
 app.use(cookieParser())
+
 const port = process.env.PORT
 
+const resMap: Map<string, Response> = new Map()
+
 app.get('/', (req, res) => {
-  // eslint-disable-next-line no-console
   console.log('home')
   return res.send('Hello World!')
 })
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const resMap: Map<string, Response> = new Map()
 app.get('/register-sse', async (req: Request, res) => {
-  // eslint-disable-next-line no-console
-  console.log('register-sse')
-  console.log('cookies', req.cookies)
-  console.log('headers', req.headers)
-  // console.log('req', JSON.stringify(req))
   const session = await getSession({ req })
   const senderEmail = session?.email
-  // eslint-disable-next-line no-console
-  // console.log(req.cookies)
-  // eslint-disable-next-line no-console
-  console.log('senderEmail', senderEmail)
-  // if (!senderEmail) {
-  //   return
-  // }
+
+  console.log({ senderEmail })
+
+  if (!senderEmail) {
+    return
+  }
 
   const headers = {
     'Content-Type': 'text/event-stream',
@@ -41,53 +32,35 @@ app.get('/register-sse', async (req: Request, res) => {
     'Cache-Control': 'no-cache',
   }
   res.writeHead(200, headers)
-  resMap.set('res', res)
-
-  // const data = `data: ${JSON.stringify(Date.now())}\n\n`
-  // eslint-disable-next-line no-console
-  console.log('writing data out of interval')
-  // res.write(data)
-
-  // setInterval(() => {
-  //   // eslint-disable-next-line no-console
-  //   console.log('writing data')
-  //   res.write(data)
-  // }, 1000)
-
   res.on('close', () => {
-    // eslint-disable-next-line no-console
     console.log(`Connection closed`)
   })
+
+  resMap.set('res', res)
 })
 
 app.get('/send-message', async (req, res) => {
+  console.log('send-message', Array.from(resMap.keys()))
   resMap.get('res')?.write(`data: message sent ${JSON.stringify(Date.now())}\n\n`)
 
   return res.send('Message sent')
-  // app
 })
 app.listen(port, () => {
-  // eslint-disable-next-line no-console
   console.log(`[server]: Server is running at http://localhost:${port}`)
 })
 
 const getSession = async ({ req }: { req: Request }) => {
-  let sessionTokenName = ''
-  let sessionTokenValue = ''
+  const token = req.headers.authorization?.split(' ')[1]
+  const cookieRaw = atob(token || '')
+  const cookie = JSON.parse(cookieRaw)
 
-  if (!!req.cookies['__Secure-authjs.session-token']) {
-    sessionTokenName = '__Secure-authjs.session-token'
-    sessionTokenValue = req.cookies['__Secure-authjs.session-token']
-  }
-
-  if (!!req.cookies['authjs.session-token']) {
-    sessionTokenName = 'authjs.session-token'
-    sessionTokenValue = req.cookies['authjs.session-token']
+  if (!token) {
+    return null
   }
 
   return await decode({
-    token: sessionTokenValue,
+    token: cookie?.value,
     secret: process.env.AUTH_SECRET || '',
-    salt: sessionTokenName || '',
+    salt: cookie?.name || '',
   })
 }
