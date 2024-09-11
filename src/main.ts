@@ -25,9 +25,9 @@ app.get('/register-sse', async (req: Request, res) => {
   console.log(req.cookies)
   // eslint-disable-next-line no-console
   console.log('senderEmail', senderEmail)
-  if (!senderEmail) {
-    return
-  }
+  // if (!senderEmail) {
+  //   return
+  // }
 
   const headers = {
     'Content-Type': 'text/event-stream',
