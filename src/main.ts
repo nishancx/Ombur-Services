@@ -3,7 +3,6 @@ import 'dotenv/config'
 import express, { Request, Response } from 'express'
 import cookieParser from 'cookie-parser'
 import { decode } from 'next-auth/jwt'
-// eslint-disable-next-line import/extensions
 import { jsonParse } from './utils/object'
 
 const app = express()
