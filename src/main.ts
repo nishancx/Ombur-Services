@@ -10,7 +10,15 @@ const app = express()
 app.use(cookieParser())
 const port = process.env.PORT
 
+app.get('/', (req, res) => {
+  // eslint-disable-next-line no-console
+  console.log('home')
+  return res.send('Hello World!')
+})
+
 app.get('/register-sse', async (req: Request, res) => {
+  // eslint-disable-next-line no-console
+  console.log('register-sse')
   const session = await getSession({ req })
   const senderEmail = session?.email
 
