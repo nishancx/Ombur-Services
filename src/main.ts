@@ -3,7 +3,7 @@ import 'dotenv/config'
 import express, { Request, Response } from 'express'
 import cookieParser from 'cookie-parser'
 import { decode } from 'next-auth/jwt'
-import { jsonParse } from './utils/object'
+import { jsonParse } from './utils/object.js'
 
 const app = express()
 app.use(cookieParser())
