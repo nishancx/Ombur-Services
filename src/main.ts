@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 import 'dotenv/config'
-import express, { Request } from 'express'
+import express, { Request, Response } from 'express'
 import cookieParser from 'cookie-parser'
 import { decode } from 'next-auth/jwt'
 
@@ -17,6 +17,8 @@ app.get('/', (req, res) => {
   return res.send('Hello World!')
 })
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const resMap: Map<string, Response> = new Map()
 app.get('/register-sse', async (req: Request, res) => {
   // eslint-disable-next-line no-console
   console.log('register-sse')
@@ -39,11 +41,12 @@ app.get('/register-sse', async (req: Request, res) => {
     'Cache-Control': 'no-cache',
   }
   res.writeHead(200, headers)
+  resMap.set('res', res)
 
-  const data = `data: ${JSON.stringify(Date.now())}\n\n`
+  // const data = `data: ${JSON.stringify(Date.now())}\n\n`
   // eslint-disable-next-line no-console
   console.log('writing data out of interval')
-  res.write(data)
+  // res.write(data)
 
   // setInterval(() => {
   //   // eslint-disable-next-line no-console
@@ -57,6 +60,12 @@ app.get('/register-sse', async (req: Request, res) => {
   })
 })
 
+app.get('/send-message', async (req, res) => {
+  resMap.get('res')?.write(`data: message sent ${JSON.stringify(Date.now())}\n\n`)
+
+  return res.send('Message sent')
+  // app
+})
 app.listen(port, () => {
   // eslint-disable-next-line no-console
   console.log(`[server]: Server is running at http://localhost:${port}`)
