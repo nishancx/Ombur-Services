@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import 'dotenv/config'
 import express, { Request } from 'express'
 import cookieParser from 'cookie-parser'
@@ -19,6 +20,9 @@ app.get('/', (req, res) => {
 app.get('/register-sse', async (req: Request, res) => {
   // eslint-disable-next-line no-console
   console.log('register-sse')
+  console.log('cookies', req.cookies)
+  console.log('headers', req.headers)
+  console.log('req', JSON.stringify(req))
   const session = await getSession({ req })
   const senderEmail = session?.email
   // eslint-disable-next-line no-console
