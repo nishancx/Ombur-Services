@@ -34,6 +34,9 @@ app.get('/register-sse', async (req: Request, res) => {
   res.writeHead(200, headers)
 
   const data = `data: ${JSON.stringify(Date.now())}\n\n`
+  // eslint-disable-next-line no-console
+  console.log('writing data out of interval')
+  res.write(data)
 
   setInterval(() => {
     // eslint-disable-next-line no-console
