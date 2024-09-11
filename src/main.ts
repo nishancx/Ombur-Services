@@ -1,38 +1,64 @@
-#!/usr/bin/env node
-
-/**
- * This is a sample HTTP server.
- * Replace this with your implementation.
- */
-
 import 'dotenv/config'
-import { createServer, IncomingMessage, ServerResponse } from 'http'
-import { resolve } from 'path'
-import { fileURLToPath } from 'url'
-import { Config } from './config.js'
+import express, { Request } from 'express'
+import cookieParser from 'cookie-parser'
+import { decode } from 'next-auth/jwt'
 
-const nodePath = resolve(process.argv[1])
-const modulePath = resolve(fileURLToPath(import.meta.url))
-const isCLI = nodePath === modulePath
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// const sseIdMap: Map<string, WritableStreamDefaultWriter<any>> = new Map()
 
-export default function main(port: number = Config.port) {
-  const requestListener = (request: IncomingMessage, response: ServerResponse) => {
-    response.setHeader('content-type', 'text/plain;charset=utf8')
-    response.writeHead(200, 'OK')
-    response.end('Olá, Hola, Hello!')
+const app = express()
+app.use(cookieParser())
+const port = process.env.PORT
+
+app.get('/register-sse', async (req: Request, res) => {
+  const session = await getSession({ req })
+  const senderEmail = session?.email
+
+  if (!senderEmail) {
+    return
   }
 
-  const server = createServer(requestListener)
+  const headers = {
+    'Content-Type': 'text/event-stream',
+    Connection: 'keep-alive',
+    'Cache-Control': 'no-cache',
+  }
+  res.writeHead(200, headers)
 
-  if (isCLI) {
-    server.listen(port)
+  const data = `data: ${JSON.stringify(Date.now())}\n\n`
+
+  setInterval(() => {
+    res.write(data)
+  }, 1000)
+
+  res.on('close', () => {
     // eslint-disable-next-line no-console
-    console.log(`Listening on port: ${port}`)
+    console.log(`Connection closed`)
+  })
+})
+
+app.listen(port, () => {
+  // eslint-disable-next-line no-console
+  console.log(`[server]: Server is running at http://localhost:${port}`)
+})
+
+const getSession = async ({ req }: { req: Request }) => {
+  let sessionTokenName = ''
+  let sessionTokenValue = ''
+
+  if (!!req.cookies['__Secure-authjs.session-token']) {
+    sessionTokenName = '__Secure-authjs.session-token'
+    sessionTokenValue = req.cookies['__Secure-authjs.session-token']
   }
 
-  return server
-}
+  if (!!req.cookies['authjs.session-token']) {
+    sessionTokenName = 'authjs.session-token'
+    sessionTokenValue = req.cookies['authjs.session-token']
+  }
 
-if (isCLI) {
-  main()
+  return await decode({
+    token: sessionTokenValue,
+    secret: process.env.AUTH_SECRET || '',
+    salt: sessionTokenName || '',
+  })
 }
