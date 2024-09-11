@@ -3,9 +3,16 @@ import 'dotenv/config'
 import express, { Request, Response } from 'express'
 import cookieParser from 'cookie-parser'
 import { decode } from 'next-auth/jwt'
+// eslint-disable-next-line import/extensions
+import { jsonParse } from './utils/object'
 
 const app = express()
 app.use(cookieParser())
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*') // Adjust origin as needed
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
+  next()
+})
 
 const port = process.env.PORT
 
@@ -50,9 +57,11 @@ app.listen(port, () => {
 })
 
 const getSession = async ({ req }: { req: Request }) => {
+  console.log(req.headers)
   const token = req.headers.authorization?.split(' ')[1]
   const cookieRaw = atob(token || '')
-  const cookie = JSON.parse(cookieRaw)
+  console.log({ cookieRaw })
+  const cookie = jsonParse(cookieRaw)
 
   if (!token) {
     return null
