@@ -45,11 +45,11 @@ app.get('/register-sse', async (req: Request, res) => {
   console.log('writing data out of interval')
   res.write(data)
 
-  setInterval(() => {
-    // eslint-disable-next-line no-console
-    console.log('writing data')
-    res.write(data)
-  }, 1000)
+  // setInterval(() => {
+  //   // eslint-disable-next-line no-console
+  //   console.log('writing data')
+  //   res.write(data)
+  // }, 1000)
 
   res.on('close', () => {
     // eslint-disable-next-line no-console
