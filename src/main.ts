@@ -22,6 +22,7 @@ app.use(
   cors({
     credentials: true,
     origin: true,
+    preflightContinue: true,
     // origin: (origin, callback) => {
     // if (ALLOWED_ORIGINS.includes(origin || '') || !origin) {
     // callback(null, true)
