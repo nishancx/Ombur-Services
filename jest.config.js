@@ -1,6 +1,7 @@
 import 'dotenv/config'
+import { serverConfig } from './src/libs/config.js'
 
-const isCI = process.env.CI === 'true'
+const isCI = serverConfig.CI === 'true'
 
 export default {
   verbose: true,
