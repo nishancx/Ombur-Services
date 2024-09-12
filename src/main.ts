@@ -31,10 +31,14 @@ app.get('/', (req, res) => {
 })
 
 app.get('/register-sse', async (req: Request, res) => {
+  // eslint-disable-next-line no-console
+  console.log('register-sse')
   const session = await getSession({ req })
   const senderEmail = session?.email
-
+  // eslint-disable-next-line no-console
+  console.log('senderEmail', senderEmail)
   if (!senderEmail) {
+    res.status(401).send('Unauthorized')
     return
   }
 
@@ -43,6 +47,7 @@ app.get('/register-sse', async (req: Request, res) => {
   const sender = await getSender({ email: senderEmail })
 
   if (!sender) {
+    res.status(401).send('Unauthorized')
     return
   }
 
