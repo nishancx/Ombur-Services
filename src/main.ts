@@ -21,12 +21,8 @@ app.use((req, res, next) => {
   const origin = req.headers.origin
   const theOrigin = ALLOWED_ORIGINS.indexOf(origin || '') >= 0 ? origin : ALLOWED_ORIGINS[0]
   res.header('Access-Control-Allow-Origin', theOrigin)
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
+  res.header('Access-Control-Allow-Headers', 'Authorization, Origin, X-Requested-With, Content-Type, Accept')
 
-  next()
-})
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Headers', 'Authorization')
   next()
 })
 
