@@ -21,13 +21,14 @@ app.use(cookieParser())
 app.use(
   cors({
     credentials: true,
-    origin: (origin, callback) => {
-      // if (ALLOWED_ORIGINS.includes(origin || '') || !origin) {
-      callback(null, true)
-      // } else {
-      // callback(new Error('Not allowed by CORS'))
-      // }
-    },
+    origin: true,
+    // origin: (origin, callback) => {
+    // if (ALLOWED_ORIGINS.includes(origin || '') || !origin) {
+    // callback(null, true)
+    // } else {
+    // callback(new Error('Not allowed by CORS'))
+    // }
+    // },
   }),
 )
 
