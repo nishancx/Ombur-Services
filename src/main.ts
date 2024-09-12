@@ -9,30 +9,31 @@ import { serverConfig } from './libs/config.js'
 import express, { Request, Response } from 'express'
 import cookieParser from 'cookie-parser'
 import { decode } from 'next-auth/jwt'
-import cors from 'cors'
+// import cors from 'cors'
 
-const ALLOWED_ORIGINS = ['https://ombur.vercel.app', 'http://localhost:3000']
+// const ALLOWED_ORIGINS = ['https://ombur.vercel.app', 'http://localhost:3000']
 const port = serverConfig.port || 8080
 const resMap: Map<string, Response> = new Map()
 
 const app = express()
 app.use(express.json())
 app.use(cookieParser())
-app.use(
-  cors({
-    credentials: true,
-    origin: (origin, callback) => {
-      if (ALLOWED_ORIGINS.includes(origin || '') || !origin) {
-        callback(null, true)
-      } else {
-        callback(new Error('Not allowed by CORS'))
-      }
-    },
-  }),
-)
+// app.use(
+//   cors({
+//     credentials: true,
+//     origin: (origin, callback) => {
+//       if (ALLOWED_ORIGINS.includes(origin || '') || !origin) {
+//         callback(null, true)
+//       } else {
+//         callback(new Error('Not allowed by CORS'))
+//       }
+//     },
+//   }),
+// )
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Headers', 'Content-Type')
-  res.header('Access-Control-Allow-Methods', 'GET, POST')
+  res.header('Access-Control-Allow-Credentials', 'true')
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '')
   next()
 })
 
