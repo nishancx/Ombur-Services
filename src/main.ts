@@ -88,9 +88,17 @@ app.get('/register-sse', async (req: Request, res) => {
 })
 
 app.post('/send-message', async (req, res) => {
+  // eslint-disable-next-line no-console
+  console.log('send-message')
+  // eslint-disable-next-line no-console
+  console.log('req.headers', req.headers)
+  // eslint-disable-next-line no-console
+  console.log('req.cookies', req.cookies)
   const session = await getSession({ req })
   const senderEmail = session?.email
 
+  // eslint-disable-next-line no-console
+  console.log('senderEmail', senderEmail)
   if (!senderEmail) {
     return
   }
