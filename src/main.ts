@@ -32,14 +32,7 @@ app.use(
 )
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Headers', 'Content-Type')
-  res.header('Access-Control-Allow-Credentials', 'true')
-  res.cookie('__Secure-authjs.session-token', 'test', {
-    sameSite: 'none',
-  })
-  res.cookie('authjs.session-token', 'test', {
-    sameSite: 'none',
-  })
-
+  res.header('Access-Control-Allow-Methods', 'GET, POST')
   next()
 })
 
