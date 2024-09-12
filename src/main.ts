@@ -41,6 +41,10 @@ app.get('/', (req, res) => {
   return res.send('Hello World!')
 })
 
+app.get('/version', (req, res) => {
+  return res.send(serverConfig.renderGitCommit)
+})
+
 app.get('/register-sse', async (req: Request, res) => {
   // eslint-disable-next-line no-console
   console.log('register-sse')

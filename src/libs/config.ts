@@ -12,6 +12,7 @@ const config = {
   mongodbUri: loadFromEnv('MONGODB_URI'),
   port: loadFromEnv('PORT'),
   authSecret: loadFromEnv('AUTH_SECRET'),
+  renderGitCommit: loadFromEnv('RENDER_GIT_COMMIT'),
 }
 
 export { config as serverConfig }
