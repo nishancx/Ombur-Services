@@ -9,6 +9,7 @@ import { serverConfig } from './libs/config.js'
 import express, { Request, Response } from 'express'
 import cookieParser from 'cookie-parser'
 import { decode } from 'next-auth/jwt'
+import cors from 'cors'
 
 const ALLOWED_ORIGINS = ['https://ombur.vercel.app', 'http://localhost:3000']
 const port = serverConfig.port || 8080
@@ -17,11 +18,20 @@ const resMap: Map<string, Response> = new Map()
 const app = express()
 app.use(express.json())
 app.use(cookieParser())
+app.use(
+  cors({
+    credentials: true,
+    origin: (origin, callback) => {
+      if (ALLOWED_ORIGINS.includes(origin || '') || !origin) {
+        callback(null, true)
+      } else {
+        callback(new Error('Not allowed by CORS'))
+      }
+    },
+  }),
+)
 app.use((req, res, next) => {
-  const origin = req.headers.origin
-  const theOrigin = ALLOWED_ORIGINS.indexOf(origin || '') >= 0 ? origin : ALLOWED_ORIGINS[0]
-  res.header('Access-Control-Allow-Origin', theOrigin)
-  res.header('Access-Control-Allow-Headers', 'Authorization, Origin, X-Requested-With, Content-Type, Accept')
+  res.header('Access-Control-Allow-Headers', 'Content-Type')
 
   next()
 })
