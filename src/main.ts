@@ -22,7 +22,7 @@ app.use(
   cors({
     credentials: true,
     // origin: true,
-    preflightContinue: true,
+    // preflightContinue: true,
     origin: (origin, callback) => {
       // eslint-disable-next-line no-console
       console.log('\n\norigin: ', origin)
