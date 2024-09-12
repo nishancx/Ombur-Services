@@ -11,7 +11,7 @@ import cookieParser from 'cookie-parser'
 import { decode } from 'next-auth/jwt'
 import cors from 'cors'
 
-const ALLOWED_ORIGINS = ['https://ombur.vercel.app', 'http://localhost:3000']
+// const ALLOWED_ORIGINS = ['https://ombur.vercel.app', 'http://localhost:3000']
 const port = serverConfig.port || 8080
 const resMap: Map<string, Response> = new Map()
 
@@ -22,17 +22,14 @@ app.use(
   cors({
     credentials: true,
     origin: (origin, callback) => {
-      if (ALLOWED_ORIGINS.includes(origin || '') || !origin) {
-        callback(null, true)
-      } else {
-        callback(new Error('Not allowed by CORS'))
-      }
+      // if (ALLOWED_ORIGINS.includes(origin || '') || !origin) {
+      callback(null, true)
+      // } else {
+      // callback(new Error('Not allowed by CORS'))
+      // }
     },
-    allowedHeaders: ['Content-Type', 'Cookie', 'cookie'],
-    methods: ['GET', 'POST'],
   }),
 )
-app.set('trust proxy', true)
 
 app.get('/', (req, res) => {
   return res.send('Hello World!')
