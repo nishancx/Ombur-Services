@@ -32,6 +32,12 @@ app.use(
 )
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Headers', 'Content-Type')
+  res.cookie('__Secure-authjs.session-token', 'test', {
+    sameSite: 'none',
+  })
+  res.cookie('authjs.session-token', 'test', {
+    sameSite: 'none',
+  })
 
   next()
 })
