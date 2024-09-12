@@ -28,7 +28,7 @@ app.use(
         callback(new Error('Not allowed by CORS'))
       }
     },
-    allowedHeaders: ['Content-Type', 'cookie'],
+    allowedHeaders: ['Content-Type', 'Cookie'],
     methods: ['GET', 'POST'],
   }),
 )
