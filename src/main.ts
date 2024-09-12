@@ -21,15 +21,17 @@ app.use(cookieParser())
 app.use(
   cors({
     credentials: true,
-    origin: true,
+    // origin: true,
     preflightContinue: true,
-    // origin: (origin, callback) => {
-    // if (ALLOWED_ORIGINS.includes(origin || '') || !origin) {
-    // callback(null, true)
-    // } else {
-    // callback(new Error('Not allowed by CORS'))
-    // }
-    // },
+    origin: (origin, callback) => {
+      // eslint-disable-next-line no-console
+      console.log('\n\norigin: ', origin)
+      // if (ALLOWED_ORIGINS.includes(origin || '') || !origin) {
+      callback(null, true)
+      // } else {
+      // callback(new Error('Not allowed by CORS'))
+      // }
+    },
   }),
 )
 
