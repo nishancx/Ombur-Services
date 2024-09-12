@@ -33,6 +33,10 @@ app.get('/', (req, res) => {
 app.get('/register-sse', async (req: Request, res) => {
   // eslint-disable-next-line no-console
   console.log('register-sse')
+  // eslint-disable-next-line no-console
+  console.log('req.headers', req.headers)
+  // eslint-disable-next-line no-console
+  console.log('req.cookies', req.cookies)
   const session = await getSession({ req })
   const senderEmail = session?.email
   // eslint-disable-next-line no-console
