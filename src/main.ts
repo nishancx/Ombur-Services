@@ -29,7 +29,6 @@ app.use(
       }
     },
     allowedHeaders: ['Content-Type', 'Cookie', 'cookie'],
-    exposedHeaders: ['Set-Cookie', 'Cookie', 'cookie'],
     methods: ['GET', 'POST'],
   }),
 )
