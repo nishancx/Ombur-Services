@@ -1,24 +1,28 @@
-/* eslint-disable no-console */
-import 'dotenv/config'
+import { connectDB } from './libs/mongo.js'
+import { Clients } from './libs/models/client.js'
+import { Users } from './libs/models/user.js'
+import { createMessageValidationSchema } from './validations/issue.js'
+import { MESSAGE } from './constants/message.js'
+import { Messages } from './libs/models/message.js'
+import { serverConfig } from './libs/config.js'
+
 import express, { Request, Response } from 'express'
 import cookieParser from 'cookie-parser'
 import { decode } from 'next-auth/jwt'
-import { jsonParse } from './utils/object.js'
 
 const app = express()
+app.use(express.json())
 app.use(cookieParser())
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*')
   res.header('Access-Control-Allow-Headers', 'Authorization')
   next()
 })
-
-const port = process.env.PORT
+const port = serverConfig.port || 8080
 
 const resMap: Map<string, Response> = new Map()
 
 app.get('/', (req, res) => {
-  console.log('home')
   return res.send('Hello World!')
 })
 
@@ -26,9 +30,15 @@ app.get('/register-sse', async (req: Request, res) => {
   const session = await getSession({ req })
   const senderEmail = session?.email
 
-  console.log({ senderEmail })
-
   if (!senderEmail) {
+    return
+  }
+
+  await connectDB()
+
+  const sender = await getSender({ email: senderEmail })
+
+  if (!sender) {
     return
   }
 
@@ -37,38 +47,121 @@ app.get('/register-sse', async (req: Request, res) => {
     Connection: 'keep-alive',
     'Cache-Control': 'no-cache',
   }
+
   res.writeHead(200, headers)
   res.on('close', () => {
-    console.log(`Connection closed`)
+    resMap.delete(sender?._id?.toString())
+    res.end()
   })
 
-  resMap.set('res', res)
+  !!sender?._id && resMap.set(sender?._id?.toString(), res)
 })
 
-app.get('/send-message', async (req, res) => {
-  console.log('send-message', Array.from(resMap.keys()))
-  resMap.get('res')?.write(`data: message sent ${JSON.stringify(Date.now())}\n\n`)
+app.post('/send-message', async (req, res) => {
+  const session = await getSession({ req })
+  const senderEmail = session?.email
 
-  return res.send('Message sent')
+  if (!senderEmail) {
+    return
+  }
+
+  await connectDB()
+
+  const senderDetails = await getSender({ email: senderEmail })
+
+  if (!senderDetails) {
+    return
+  }
+
+  const body = req.body
+  const { text, issueId, userId, clientId, sender } = body
+
+  const isPayloadValid = createMessageValidationSchema.safeParse({
+    text,
+    issueId,
+    userId,
+    clientId,
+    sender,
+  })
+
+  if (!isPayloadValid.success) {
+    return res.status(400).send(isPayloadValid.error)
+  }
+
+  if (sender === MESSAGE.SENDER_TYPE_INDEX.CLIENT) {
+    const client = await Clients.findOne({ email: senderEmail })
+
+    if (!client) {
+      throw new Error('Client not found')
+    }
+  }
+
+  if (sender === MESSAGE.SENDER_TYPE_INDEX.USER) {
+    const user = await Users.findOne({ username: senderEmail })
+
+    if (!user) {
+      throw new Error('User not found')
+    }
+  }
+
+  const newMessage = await Messages.create({
+    sender,
+    issueId,
+    userId,
+    clientId,
+    text,
+  })
+
+  const receiverId = sender === MESSAGE.SENDER_TYPE_INDEX.CLIENT ? userId : clientId
+
+  const receiverWriter = resMap.get(receiverId)
+
+  if (receiverWriter) {
+    const encoder = new TextEncoder()
+
+    receiverWriter.write(encoder.encode(`data: ${JSON.stringify(newMessage)}\n\n`))
+  }
+
+  return res.send(newMessage)
 })
 app.listen(port, () => {
+  // eslint-disable-next-line no-console
   console.log(`[server]: Server is running at http://localhost:${port}`)
 })
 
 const getSession = async ({ req }: { req: Request }) => {
-  console.log(req.headers)
-  const token = req.headers.authorization?.split(' ')[1]
-  const cookieRaw = atob(token || '')
-  console.log({ cookieRaw })
-  const cookie = jsonParse(cookieRaw)
+  let name = ''
+  let value = ''
 
-  if (!token) {
+  const httpsToken = req.cookies?.['__Secure-authjs.session-token']
+  if (!!httpsToken) {
+    name = '__Secure-authjs.session-token'
+    value = httpsToken || ''
+  }
+
+  const httpToken = req.cookies?.['authjs.session-token']
+  if (!!httpToken) {
+    name = 'authjs.session-token'
+    value = httpToken
+  }
+
+  if (!value) {
     return null
   }
 
   return await decode({
-    token: cookie?.value,
-    secret: process.env.AUTH_SECRET || '',
-    salt: cookie?.name || '',
+    token: value,
+    secret: serverConfig.authSecret || '',
+    salt: name || '',
   })
+}
+
+const getSender = async ({ email }: { email: string }) => {
+  await connectDB()
+
+  if (email.includes('@')) {
+    return await Clients.findOne({ email: email })
+  }
+
+  return await Users.findOne({ username: email })
 }
