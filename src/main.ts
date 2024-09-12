@@ -10,17 +10,25 @@ import express, { Request, Response } from 'express'
 import cookieParser from 'cookie-parser'
 import { decode } from 'next-auth/jwt'
 
+const ALLOWED_ORIGINS = ['https://ombur.vercel.app', 'http://localhost:3000']
+const port = serverConfig.port || 8080
+const resMap: Map<string, Response> = new Map()
+
 const app = express()
 app.use(express.json())
 app.use(cookieParser())
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*')
+  const origin = req.headers.origin
+  const theOrigin = ALLOWED_ORIGINS.indexOf(origin || '') >= 0 ? origin : ALLOWED_ORIGINS[0]
+  res.header('Access-Control-Allow-Origin', theOrigin)
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
+
+  next()
+})
+app.use((req, res, next) => {
   res.header('Access-Control-Allow-Headers', 'Authorization')
   next()
 })
-const port = serverConfig.port || 8080
-
-const resMap: Map<string, Response> = new Map()
 
 app.get('/', (req, res) => {
   return res.send('Hello World!')
