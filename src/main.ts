@@ -32,6 +32,7 @@ app.use(
     methods: ['GET', 'POST'],
   }),
 )
+app.set('trust proxy', true)
 
 app.get('/', (req, res) => {
   return res.send('Hello World!')
