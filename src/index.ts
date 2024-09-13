@@ -22,7 +22,7 @@ app.set('trust proxy', 1)
 app.use(
   cors({
     credentials: true,
-    preflightContinue: false,
+    preflightContinue: true,
     // origin: true,
     // preflightContinue: true,
     origin: (origin, callback) => {
