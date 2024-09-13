@@ -16,6 +16,9 @@ const port = serverConfig.port || 8080
 const resMap: Map<string, Response> = new Map()
 
 const app = express()
+app.use(express.json())
+app.use(cookieParser())
+app.set('trust proxy', 1)
 app.use(
   cors({
     credentials: true,
@@ -32,8 +35,6 @@ app.use(
     },
   }),
 )
-app.use(express.json())
-app.use(cookieParser())
 
 app.get('/', (req, res) => {
   return res.send('Hello World!')
