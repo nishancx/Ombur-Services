@@ -32,6 +32,8 @@ app.use(
       // callback(new Error('Not allowed by CORS'))
       // }
     },
+    allowedHeaders: ['Content-Type', '*'],
+    methods: ['GET', 'POST', 'OPTIONS'],
   }),
 )
 app.use(express.json())
