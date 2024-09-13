@@ -10,9 +10,16 @@ import { jsonParse } from './utils/object.js'
 import express, { Request, Response } from 'express'
 import { decode } from 'next-auth/jwt'
 import cors from 'cors'
+import { randomUUID } from 'crypto'
 
 const port = serverConfig.port || 8080
-const resMap: Map<string, Response> = new Map()
+const resMap: Map<
+  string,
+  {
+    id: string
+    res: Response
+  }[]
+> = new Map()
 const ALLOWED_ORIGINS = ['https://ombur.vercel.app', 'http://localhost:3000']
 
 const app = express()
@@ -58,6 +65,7 @@ app.get('/register-sse', async (req: Request, res) => {
     return
   }
 
+  const senderId = sender?._id?.toString()
   const headers = {
     'Content-Type': 'text/event-stream',
     Connection: 'keep-alive',
@@ -65,20 +73,29 @@ app.get('/register-sse', async (req: Request, res) => {
   }
 
   res.writeHead(200, headers)
+  const previousWriters = resMap.get(senderId) || []
+
   res.on('close', () => {
-    resMap.delete(sender?._id?.toString())
+    const newWriters = previousWriters.filter(writer => writer.id !== senderId)
+
+    if (!newWriters.length) {
+      resMap.delete(senderId)
+    } else {
+      resMap.set(senderId, newWriters)
+    }
+
     res.end()
   })
 
-  !!sender?._id && resMap.set(sender?._id?.toString(), res)
+  if (sender?._id) {
+    resMap.set(senderId, [...previousWriters, { id: randomUUID(), res }])
+  }
 })
 
 app.post('/send-message', async (req, res) => {
   const session = await getSession({ req })
   const senderEmail = session?.email
 
-  // eslint-disable-next-line no-console
-  console.log('senderEmail', senderEmail)
   if (!senderEmail) {
     return
   }
@@ -132,16 +149,15 @@ app.post('/send-message', async (req, res) => {
 
   const receiverId = sender === MESSAGE.SENDER_TYPE_INDEX.CLIENT ? userId : clientId
 
-  const receiverWriter = resMap.get(receiverId)
+  const receiverWriters = resMap.get(receiverId)
 
-  if (receiverWriter) {
-    const encoder = new TextEncoder()
-
-    receiverWriter.write(encoder.encode(`data: ${JSON.stringify(newMessage)}\n\n`))
-  }
+  receiverWriters?.forEach(writer => {
+    writer.res.write(`data: ${JSON.stringify(newMessage)}\n\n`)
+  })
 
   return res.send(newMessage)
 })
+
 app.listen(port, () => {
   // eslint-disable-next-line no-console
   console.log(`[server]: Server is running at port:${port}`)
