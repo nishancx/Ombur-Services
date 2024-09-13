@@ -17,6 +17,8 @@
     "format:check": "prettier \"./**\" --ignore-unknown --check"
   },
   "dependencies": {
+    "@types/cors": "^2.8.17",
+    "cors": "^2.8.5",
     "dotenv": "^16.0.0",
     "express": "^4.20.0",
     "mongoose": "^8.6.2",

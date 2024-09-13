@@ -5,16 +5,32 @@ import { createMessageValidationSchema } from './validations/issue.js'
 import { MESSAGE } from './constants/message.js'
 import { Messages } from './libs/models/message.js'
 import { serverConfig } from './libs/config.js'
+import { jsonParse } from './utils/object.js'
 
 import express, { Request, Response } from 'express'
 import { decode } from 'next-auth/jwt'
-import { jsonParse } from './utils/object.js'
+import cors from 'cors'
 
 const port = serverConfig.port || 8080
 const resMap: Map<string, Response> = new Map()
+const ALLOWED_ORIGINS = ['https://ombur.vercel.app', 'http://localhost:3000']
 
 const app = express()
 app.use(express.json())
+app.use(
+  cors({
+    credentials: true,
+    preflightContinue: true,
+    origin: (origin, callback) => {
+      if (ALLOWED_ORIGINS.includes(origin || '') || !origin) {
+        callback(null, true)
+      } else {
+        callback(new Error('Not allowed by CORS'))
+      }
+    },
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  }),
+)
 
 app.get('/', (req, res) => {
   return res.send('Hello World!')
