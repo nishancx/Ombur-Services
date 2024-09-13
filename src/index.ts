@@ -7,37 +7,14 @@ import { Messages } from './libs/models/message.js'
 import { serverConfig } from './libs/config.js'
 
 import express, { Request, Response } from 'express'
-import cookieParser from 'cookie-parser'
 import { decode } from 'next-auth/jwt'
-import cors from 'cors'
+import { jsonParse } from './utils/object.js'
 
-// const ALLOWED_ORIGINS = ['https://ombur.vercel.app', 'http://localhost:3000']
 const port = serverConfig.port || 8080
 const resMap: Map<string, Response> = new Map()
 
 const app = express()
-app.set('trust proxy', 1)
-app.use(
-  cors({
-    credentials: true,
-    preflightContinue: true,
-    // origin: true,
-    // preflightContinue: true,
-    origin: (origin, callback) => {
-      // eslint-disable-next-line no-console
-      console.log('\n\norigin: ', origin)
-      // if (ALLOWED_ORIGINS.includes(origin || '') || !origin) {
-      callback(null, true)
-      // } else {
-      // callback(new Error('Not allowed by CORS'))
-      // }
-    },
-    allowedHeaders: ['Content-Type', '*'],
-    methods: ['GET', 'POST', 'OPTIONS'],
-  }),
-)
 app.use(express.json())
-app.use(cookieParser())
 
 app.get('/', (req, res) => {
   return res.send('Hello World!')
@@ -48,16 +25,9 @@ app.get('/version', (req, res) => {
 })
 
 app.get('/register-sse', async (req: Request, res) => {
-  // eslint-disable-next-line no-console
-  console.log('register-sse')
-  // eslint-disable-next-line no-console
-  console.log('req.headers', req.headers)
-  // eslint-disable-next-line no-console
-  console.log('req.cookies', req.cookies)
   const session = await getSession({ req })
   const senderEmail = session?.email
-  // eslint-disable-next-line no-console
-  console.log('senderEmail', senderEmail)
+
   if (!senderEmail) {
     res.status(401).send('Unauthorized')
     return
@@ -88,12 +58,6 @@ app.get('/register-sse', async (req: Request, res) => {
 })
 
 app.post('/send-message', async (req, res) => {
-  // eslint-disable-next-line no-console
-  console.log('send-message')
-  // eslint-disable-next-line no-console
-  console.log('req.headers', req.headers)
-  // eslint-disable-next-line no-console
-  console.log('req.cookies', req.cookies)
   const session = await getSession({ req })
   const senderEmail = session?.email
 
@@ -168,22 +132,33 @@ app.listen(port, () => {
 })
 
 const getSession = async ({ req }: { req: Request }) => {
-  let name = ''
-  let value = ''
+  const authorization = req.headers?.authorization
 
-  const httpsToken = req.cookies?.['__Secure-authjs.session-token']
-  if (!!httpsToken) {
-    name = '__Secure-authjs.session-token'
-    value = httpsToken || ''
+  if (!authorization) {
+    return null
   }
 
-  const httpToken = req.cookies?.['authjs.session-token']
-  if (!!httpToken) {
-    name = 'authjs.session-token'
-    value = httpToken
+  const token = authorization.split(' ')[1]
+
+  if (!token) {
+    return null
   }
 
-  if (!value) {
+  const rawCookies = atob(token)
+
+  if (!rawCookies) {
+    return null
+  }
+
+  const cookies = jsonParse(rawCookies)
+
+  if (!cookies) {
+    return null
+  }
+
+  const { name, value } = cookies
+
+  if (!name || !value) {
     return null
   }
 
